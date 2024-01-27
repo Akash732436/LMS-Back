@@ -19,9 +19,10 @@ const Course = mongoose.Schema({
         require:[true,""]
     },
     faculty_id : {
-        type:ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Users',
         require:[true,""]
     }
 })
 
-module.exports = mongoose.model(Course,Course);
+module.exports = mongoose.model("Course",Course);

@@ -12,4 +12,4 @@ const CourseCategory = mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model(CourseCategory,CourseCategory);
+module.exports = mongoose.model("CourseCategory",CourseCategory);
