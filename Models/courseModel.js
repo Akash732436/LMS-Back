@@ -20,7 +20,7 @@ const Course = mongoose.Schema({
     },
     faculty_id : {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Users',
+        ref: 'Course',
         require:[true,""]
     }
 })

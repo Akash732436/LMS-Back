@@ -3,7 +3,8 @@ const mongoose = require("mongoose");
 
 const CourseCategory = mongoose.Schema({
     course_id : {
-        type:ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Course',
         require : [true,""]
     },
     category : {

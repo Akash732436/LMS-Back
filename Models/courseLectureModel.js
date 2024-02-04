@@ -9,8 +9,9 @@ const CourseLecture = mongoose.Schema({
         type : String,
     },
     section_id : {
-        type : ObjectId
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'CourseSection',
     }
 });
 
-module.exports = mongoose.model(CourseLecture,CourseLecture);
+module.exports = mongoose.model("CourseLecture",CourseLecture);
