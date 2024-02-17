@@ -3,7 +3,8 @@ const mongoose = require("mongoose");
 
 const CourseCategory = mongoose.Schema({
     course_id : {
-        type:ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Course',
         require : [true,""]
     },
     category : {
@@ -12,4 +13,4 @@ const CourseCategory = mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model(CourseCategory,CourseCategory);
+module.exports = mongoose.model("CourseCategory",CourseCategory);
