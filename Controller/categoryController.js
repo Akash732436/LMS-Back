@@ -51,3 +51,5 @@ const removeCategory = asynchandler(async (req, res) => {
         res.json({ success: "false", Error: "Internal Server Error when creating user" });
     }
 });
+
+module.exports = {addCategory, removeCategory};
