@@ -1,5 +1,5 @@
 const asynchandler = require("express-async-handler");
-const User = require("../Models/userModel.js");
+const {createUser, findUser} = require("../DataAccess/userService.js")
 const jwt = require("jsonwebtoken");
 
 
@@ -13,22 +13,24 @@ const INSTRUCTOR = process.env.INSTRUCTOR_KEY;
 const registerUser = asynchandler(async (req, res) => {
 
     try {
-        //fecth data for the requets
+        //fetch data for the requets
         const { userName, firstName, lastName, password, userType } = req.body;
-        const user = await User.create({
-            userName,
-            firstName,
-            lastName,
-            password,
-            userType
-        });
+
+        const user = await createUser(userName, firstName, lastName, password, userType);
+
+        if (!user) {
+            console.log("Error while creating a user: ");
+            res.status(500);
+            res.json({ success: "false", Error: "Internal Server Error when creating user"});
+            return;
+        }
 
         res.json({ success: "true" });
     }
     catch (Exception) {
         console.log("Error while creating a user: ", Exception);
         res.status(500);
-        res.json({ success: "false", Error: "Internal Server Error when creating user" });
+        res.json({ success: "false", Error: "Internal Server Error when creating user: "+ Exception });
     }
 
 })
@@ -42,19 +44,20 @@ const loginUser = asynchandler(async (req, res) => {
     try {
         
         const { userName, password } = req.body;
-        var user = await User.find({ userName: userName, password: password }).exec();
+        //var user = await User.find({ userName: userName, password: password }).exec();
+        var user = await findUser(userName, password);
         if (!user) {
-            return res.status(401).json({message:"Your account does not exist"});
+            return res.status(401).json({message:"Account does not exist. Please create a new account"});
         }
 
-        const key = user[0].userType == 'admin' ? ADMIN : user[0].userType == "student"?USER: user[0].userType == "faculty"?INSTRUCTOR:"";
-        console.log("user value is: ",user)
+        const key = user.userType == 'admin' ? ADMIN : user.userType == "student"?USER: user.userType == "faculty"?INSTRUCTOR:"";
+        
         if(!key){
             res.status(401).json({message:"You don't have a specific role"});
             return;
         }
 
-        const token = jwt.sign({userName:user[0].userName, firstName:user[0].firstName, lastName:user[0].lastName, role:user[0].userType}, key);
+        const token = jwt.sign({userName:user.userName, firstName:user.firstName, lastName:user.lastName, role:user.userType}, key);
 
         res.json({token});
     }
