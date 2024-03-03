@@ -6,6 +6,7 @@ const INSTRUCTOR = process.env.INSTRUCTOR_KEY;
 
 
 const verifyRole = (roles) => (req, res, next) => {
+    console.log("verify role")
     console.log(req.headers.authorization.split(' ')[0]);
     const token = req.headers.authorization && req.headers.authorization.split(' ')[0];
 
@@ -13,6 +14,7 @@ const verifyRole = (roles) => (req, res, next) => {
         return res.status(401).json({ message: "Unauthorized: No token provided" });
     }
     let isValid = false;
+    
     for (const role of roles) {
         const key = role == 'admin' ? ADMIN : role == 'student' ? USER : role == "faculty" ? INSTRUCTOR : "";
 

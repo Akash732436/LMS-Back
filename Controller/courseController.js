@@ -13,10 +13,45 @@ const createCourse = asynchandler(async (req, res) => {
     try {
         const user_name = req.params.user_name;
         const user = await Users.find({ userName: user_name });
+
+        if (!user || user.length == 0) {
+            console.log("User does not exist");
+            res.status(500).json({success:"false", message: "Please login to continue"});
+            return;
+        }
+
+        if (user[0].userType != 'faculty') {
+            console.log("User is not authoorized to access this operation");
+            res.status(500).json({success:"false", message: "You are not authoorized to access this operation"});
+            return;
+        }
+
         const user_id = user[0]._id;
         const { courseName, courseDesc, categories } = req.body;
 
-        console.log("user id is ", user_id);
+        //check for null values in req body
+        if ( !courseName || !courseDesc || !categories ) {
+            console.log("one or more fields in req body is not filled: ",req.body);
+            res.status(400).json({success: "false", Error:"A field in the requset is not filled"});
+            return;
+        }
+
+        //check for empty field
+        if ( courseName.length == 0 || courseDesc.length == 0 ) {
+            console.log("one or more empty field in req body: ",req.body);
+            res.status(400).json({success: "false", Error:"A field in your requset is empty"});
+            return;
+        }
+
+        const coursePresent = await Course.find({faculty_id : user_id, courseName : courseName});
+
+        console.log(coursePresent);
+
+        if (coursePresent && coursePresent.length > 0) {
+            console.log("User already created the course with the give name: ",courseName);
+            res.status(400).json({success: "false", Error:"A course with the given name already exists"});
+            return;
+        }
 
         const created = await Course.create({
             courseName,
@@ -33,12 +68,12 @@ const createCourse = asynchandler(async (req, res) => {
             })
         }
 
-        res.json({ success: "true", created });
+        res.json({ success: "true", course: created });
     }
     catch (Exception) {
-        console.log("Error while logging a user ", Exception);
+        console.log("Error while creating the course ", Exception);
         res.status(500);
-        res.json({ success: "false", Error: "Internal Server Error when creating user" });
+        res.json({ success: "false", Error: "Error while creating the course " });
     }
 });
 
