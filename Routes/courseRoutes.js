@@ -4,7 +4,7 @@ const verifyRole = require("../MiddleWare/Auth/authorize")
 
 const {createCourse, updateCourse, removeCourse, registerStudent, registeredCourses, createdCourses, getCourseList} = require("../Controller/courseController");
 
-router.route("/:user_name/course", verifyRole(["faculty"])).post(createCourse).put(updateCourse).delete(removeCourse);
+router.route("/:user_name/course").post(verifyRole(["faculty"]), createCourse).put(verifyRole(["faculty"]), updateCourse).delete(verifyRole(["faculty"]), removeCourse);
 
 router.post("/:user_name/register", verifyRole(["faculty","student"]), registerStudent);
 

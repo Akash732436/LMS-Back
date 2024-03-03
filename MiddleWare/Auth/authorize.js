@@ -6,9 +6,10 @@ const INSTRUCTOR = process.env.INSTRUCTOR_KEY;
 
 
 const verifyRole = (roles) => (req, res, next) => {
-    console.log("verify role")
-    console.log(req.headers.authorization.split(' ')[0]);
-    const token = req.headers.authorization && req.headers.authorization.split(' ')[0];
+    console.log("Autorizing...")
+    //const token = req.headers.authorization && req.headers.authorization.split(' ')[0];
+    const token = req.headers.token;
+    
 
     if (!token) {
         return res.status(401).json({ message: "Unauthorized: No token provided" });

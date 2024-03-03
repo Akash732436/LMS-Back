@@ -85,11 +85,47 @@ const updateCourse = asynchandler(async (req, res) => {
         const user_name = req.params.user_name;
         const user = await Users.find({ userName: user_name });
         const user_id = user[0]._id;
+        
+        if (!user || user.length == 0) {
+            console.log("User does not exist");
+            res.status(500).json({success:"false", message: "Please login to continue"});
+            return;
+        }
+
+        if (user[0].userType != 'faculty') {
+            console.log("User is not authoorized to access this operation");
+            res.status(500).json({success:"false", message: "You are not authoorized to access this operation"});
+            return;
+        }
+
         const { courseOldName,courseNewName, courseDesc } = req.body;
+
+        //check for null values in req body
+        if ( !courseOldName || !courseNewName || !courseDesc ) {
+            console.log("one or more fields in req body is not filled: ",req.body);
+            res.status(400).json({success: "false", Error:"A field in the requset is not filled"});
+            return;
+        }
+
+        //check for empty field
+        if ( courseOldName.length == 0 || courseNewName.length == 0 || courseDesc.length == 0 ) {
+            console.log("one or more empty field in req body: ",req.body);
+            res.status(400).json({success: "false", Error:"A field in your requset is empty"});
+            return;
+        }
 
         console.log("user id is ", user_id);
 
         const course = await Course.find({faculty_id : user_id, courseName : courseOldName});
+        const coursePresent = await Course.find({faculty_id : user_id, courseName : courseNewName});
+
+        console.log(coursePresent);
+
+        if (coursePresent && coursePresent.length > 0) {
+            console.log("User already created the course with the give name: ",courseNewName);
+            res.status(400).json({success: "false", Error:"A course with the given name already exists"});
+            return;
+        }
 
         course.courseName = courseNewName;
         course.courseDesc = courseDesc;
@@ -99,9 +135,9 @@ const updateCourse = asynchandler(async (req, res) => {
         res.json({ success: "true" });
     }
     catch (Exception) {
-        console.log("Error while logging a user ", Exception);
+        console.log("Error while updating a course ", Exception);
         res.status(500);
-        res.json({ success: "false", Error: "Internal Server Error when creating user" });
+        res.json({ success: "false", Error: "Internal Server Error" });
     }
 });
 
@@ -112,10 +148,43 @@ const removeCourse = asynchandler(async (req, res) => {
     try {
         const user_name = req.params.user_name;
         const user = await Users.find({ userName: user_name });
+
+        if (!user || user.length == 0) {
+            console.log("User does not exist");
+            res.status(500).json({success:"false", message: "Please login to continue"});
+            return;
+        }
+
+        if (user[0].userType != 'faculty') {
+            console.log("User is not authoorized to access this operation");
+            res.status(500).json({success:"false", message: "You are not authoorized to access this operation"});
+            return;
+        }
+
         const user_id = user[0]._id;
+ 
         const { courseName } = req.body;
 
+        //check for null values in req body
+        if ( !courseName) {
+            console.log("one or more fields in req body is not filled: ",req.body);
+            res.status(400).json({success: "false", Error:"A field in the requset is not filled"});
+            return;
+        }
+
+        //check for empty field
+        if ( courseName.length == 0 ) {
+            console.log("one or more empty field in req body: ",req.body);
+            res.status(400).json({success: "false", Error:"A field in your requset is empty"});
+            return;
+        }
+
         const course = await Course.find({faculty_id : user_id, courseName : courseName});
+
+        if(!course || course.length == 0 ){
+            console.log("no course with the given name");
+            res.json({success:"true"});
+        }
         
         const sections = await Section.find({course_id : course[0]._id});
 
@@ -139,9 +208,9 @@ const removeCourse = asynchandler(async (req, res) => {
 
     }
     catch (Exception) {
-        console.log("Error while logging a user ", Exception);
+        console.log("Error while removing a course ", Exception);
         res.status(500);
-        res.json({ success: "false", Error: "Internal Server Error when creating user" });
+        res.json({ success: "false", Error: "Internal Server Error" });
     }
 })
 
@@ -185,10 +254,23 @@ const registeredCourses = asynchandler(async (req, res) => {
     try {
         const user_name = req.params.user_name;
         const user = await Users.find({ userName: user_name });
+
+        if (!user || user.length == 0) {
+            console.log("User does not exist");
+            res.status(500).json({success:"false", message: "Please login to continue"});
+            return;
+        }
+
+        if (user[0].userType != 'faculty') {
+            console.log("User is not authoorized to access this operation");
+            res.status(500).json({success:"false", message: "You are not authoorized to access this operation"});
+            return;
+        }
+
         const user_id = user[0]._id;
         console.log("user name is: ", user_id);
 
-        const courseList = await UserCourse.find({ user_id: user_id });
+        const courseList = await Course.find({ user_id: user_id });
         console.log("course list is: ", courseList);
         const courseIds = courseList.map(entry => entry.course_id);
         const courses = await Course.find({ _id: { $in: courseIds } });
@@ -227,12 +309,35 @@ const registerStudent = asynchandler(async (req, res) => {
         const user_name = req.params.user_name;
         const { course_name, faculty_name } = req.body;
         const user = await Users.find({ userName: user_name });
+
+        if (!user || user.length == 0) {
+            console.log("User does not exist");
+            res.status(500).json({success:"false", message: "Please login to continue"});
+            return;
+        }
+
+        if (user[0].userType != 'faculty') {
+            console.log("User is not authoorized to access this operation");
+            res.status(500).json({success:"false", message: "You are not authoorized to access this operation"});
+            return;
+        }
+
         const user_id = user[0]._id;
 
         const faculty = await Users.find({ userName: faculty_name });
+
+        if (!faculty || faculty.length == 0) {
+            console.log("faculty with the given name: ",faculty_name," does not exist");
+            req.res(400).json({success:"false",message:"the given course does not exist. Please refresh"});
+        }
         const faculty_id = faculty[0]._id;
         const course = await Course.find({ courseName: course_name, faculty_id: faculty_id });
         console.log("courses: ", course);
+
+        if (!course || course.length == 0) {
+            console.log("course with the given name: ",course_name," and the facult ", faculty_name," does not exist");
+            req.res(400).json({success:"false",message:"the given course does not exist. Please refresh"});
+        }
 
         const course_id = course[0]._id;
         await UserCourse.create({
@@ -257,8 +362,20 @@ const createdCourses = asynchandler(async (req, res) => {
     try {
         const user_name = req.params.user_name;
         const user = await Users.find({ userName: user_name });
+
+        if (!user || user.length == 0) {
+            console.log("User does not exist");
+            res.status(500).json({success:"false", message: "Please login to continue"});
+            return;
+        }
+
+        if (user[0].userType != 'faculty') {
+            console.log("User is not authoorized to access this operation");
+            res.status(500).json({success:"false", message: "You are not authoorized to access this operation"});
+            return;
+        }
+
         const user_id = user[0]._id;
-        console.log("user name is: ", user_id);
 
         const courses = await Course.find({ faculty_id: user_id });
         console.log("course list is: ", courses);
